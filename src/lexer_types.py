@@ -3,12 +3,14 @@ from enum import Enum, auto
 
 @dataclass
 class Char:
+    """Character object returned by Lexer._characters iterator, has location of the character"""
     char: str
     line: int
     col: int
 
     @property
     def loc(self) -> str:
+        """Text representation of the character's location"""
         return f"{self.line}:{self.col}"
 
 class TokenType(Enum):
@@ -29,4 +31,5 @@ class Token:
 
     @property
     def loc(self) -> str:
+        """Text representation of the token's location"""
         return f"{self.line}:{self.col}"

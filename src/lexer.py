@@ -27,6 +27,9 @@ class Lexer:
         self.chars = self._characters()
 
     def _characters(self) -> Iterator[Char]:
+        """
+        Iterator of all characters in the file
+        """
         line = 1
         col = 0
 
@@ -38,13 +41,19 @@ class Lexer:
             yield Char(self.text[self.index], line, col)
             self.index += 1
     
-    def _next_char(self):
+    def _next_char(self) -> Char:
+        """
+        Returns next charater, throws an error on EOF
+        """
         try:
             return next(self.chars)
         except StopIteration:
             print("\033[1;31mError:\033[0m Unexpected EOF")
 
-    def _get_string(self):
+    def _get_string(self) -> str:
+        """
+        Returns a string content of the currently lexed string 
+        """
         is_escaped = False
         string = ""
         while True:
@@ -67,6 +76,9 @@ class Lexer:
         return string
 
     def _lex_alphanum(self, char):
+        """
+        Lexes alphanumerical token
+        """
         init_char = char
         token = ""
         eof = False
@@ -85,6 +97,10 @@ class Lexer:
 
 
     def _next_token(self) -> Optional[Token]:
+        """
+        Lexes and returns next token
+        Returns None if EOF is reached
+        """
         try:
             char = next(self.chars)
         except StopIteration:
@@ -100,7 +116,10 @@ class Lexer:
         else:
             return self._lex_alphanum(char)
 
-    def lex_text(self):
+    def lex_text(self) -> list[Token]:
+        """
+        Retruns list of tokens in the lexer's text
+        """
         tokens = []
         while True:
             token = self._next_token()

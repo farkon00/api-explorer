@@ -11,9 +11,15 @@ class Parser:
         self.defenitions = []
 
     def _curr_token(self) -> Token:
+        """
+        Retruns current token
+        """
         return self.tokens[self.index - 1]
 
     def _next_token(self) -> Token:
+        """
+        Returns next token and incremeants index
+        """
         self.index += 1
         if self.index - 1 >= len(self.tokens):
             self.index -= 1
@@ -21,26 +27,48 @@ class Parser:
         return self._curr_token()
 
     def _error(self, error: str):
+        """
+        Throws an error
+        """
         token = self._curr_token()
         print(f"\033[1;31mError {token.loc}:\033[0m {error}")
         print("    " + token.value)
         exit(1)
 
     def _get_token_name(self, token: Token) -> str:
+        """
+        Shortcut for token.typ.name.lower()  
+        Usually used for error messages 
+        """
         return token.typ.name.lower()
 
     def _expect(self, token: Token, typ: TokenType, string: str | None = None):
+        """
+        Checks if given token is of type typ, otherwise throws an error
+        """
         if token.typ != typ:
             self._error(f"Expected {string if string is not None else typ.name.lower()}, got {self._get_token_name(token)}")
 
-    def _expect_next(self, typ: TokenType, string=None) -> Token:
+    def _expect_next(self, typ: TokenType, string: str = None) -> Token:
+        """
+        Checks if next token is of type typ, throws an error if it's not
+        
+        Returns next token
+        """
         self._expect(self._next_token(), typ, string)
         return self._curr_token()
 
-    def _parse_string(self):
+    def _parse_string(self) -> str:
+        """
+        Parses next token and returns the value if it is string, otherwise throw expected error 
+        """
         return self._expect_next(TokenType.STRING).value
 
     def _parse_response_keyword(self, token: Token) -> Expr:
+        """
+        Parses response token
+        Usually shouldn't be called outside of _parse_keyword method 
+        """
         route = self._expect_next(TokenType.STRING)
         response = self._expect_next(TokenType.IDENTIFIER)
         if len(response.value) != 3 or not response.value.isnumeric():
@@ -51,6 +79,9 @@ class Parser:
         return Expr(ExprType.RESPONSE, [route.value, int(response.value), form], token)
 
     def _parse_keyword(self, token: Token) -> Expr:
+        """
+        Parses keyword token 
+        """
         self._expect(token, TokenType.KEYWORD)
         if token.value == "def":
             name = self._expect_next(TokenType.IDENTIFIER)
@@ -76,13 +107,19 @@ class Parser:
         else:
             assert False, f"Not implemented keyword {token.value}"
 
-    def _parse_format_mapping(self):
+    def _parse_format_mapping(self) -> tuple[str, Expr | str]:
+        """
+        Parses one key value pair from format
+        """
         name = self._parse_string()
         self._expect_next(TokenType.COLON)
         value = self._parse_nested_expr()
         return name, value
 
-    def _parse_format(self):
+    def _parse_format(self) -> Expr:
+        """
+        Parses format expression
+        """
         token = self._curr_token()
         mappings = {} 
         while True:
@@ -95,12 +132,16 @@ class Parser:
         return Expr(ExprType.FORMAT, mappings, token)\
         
     def _parse_identifier(self, token: Token) -> Expr:
+        """
+        Parses identifier token, throws an error if name wasn't found corresponding to anything
+        """
         if token.value in self.defenitions:
             return Expr(ExprType.LOAD_DEF, [token.value], token)
         else:
             self._error("Unknown name")
 
     def _parse_nested_expr(self) -> Expr | str:
+        """Get next nestable expression"""
         token = self._next_token()
         if token.typ == TokenType.KEYWORD:
             if token.value not in self.NESTABLE_KEYWORDS:
@@ -124,7 +165,10 @@ class Parser:
             self._error("This keyword cannot be used on a top level")
         return self._parse_keyword(token)
 
-    def parse_tokens(self):
+    def parse_tokens(self) -> list[Expr]:
+        """
+        Parse tokens of the parser
+        """
         exprs = []
         while self.index < len(self.tokens):
             exprs.append(self._parse_top_expr())

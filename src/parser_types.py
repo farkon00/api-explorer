@@ -17,6 +17,7 @@ class ExprType(Enum):
 
 @dataclass
 class Expr:
+    """Expr is AST"""
     typ: ExprType
     args: list["Expr" | str] | dict[str, "Expr"]
     token: Token
