@@ -8,6 +8,7 @@ class Parser:
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens
         self.index = 0
+        self.defenitions = []
 
     def _curr_token(self) -> Token:
         return self.tokens[self.index - 1]
@@ -52,7 +53,13 @@ class Parser:
     def _parse_keyword(self, token: Token) -> Expr:
         self._expect(token, TokenType.KEYWORD)
         if token.value == "def":
-            assert False, "Not implemented"
+            name = self._expect_next(TokenType.IDENTIFIER)
+            def_value = self._parse_nested_expr()
+            if isinstance(def_value, str):
+                # TODO: May be it can?
+                self._error("String can't be a defenition value")
+            self.defenitions.append(name.value)
+            return Expr(ExprType.DEF, [name.value, def_value], token)
         elif token.value == "route":
             # TODO: Give a tip if there is code after route 
             route = self._expect_next(TokenType.STRING)
@@ -85,7 +92,13 @@ class Parser:
                 break
             else:
                 self._expect(self._curr_token(), TokenType.COMMA)
-        return Expr(ExprType.FORMAT, mappings, token)
+        return Expr(ExprType.FORMAT, mappings, token)\
+        
+    def _parse_identifier(self, token: Token) -> Expr:
+        if token.value in self.defenitions:
+            return Expr(ExprType.LOAD_DEF, [token.value], token)
+        else:
+            self._error("Unknown name")
 
     def _parse_nested_expr(self) -> Expr | str:
         token = self._next_token()
@@ -95,6 +108,8 @@ class Parser:
             return self._parse_keyword(token)
         elif token.typ == TokenType.STRING:
             return token.value
+        elif token.typ == TokenType.IDENTIFIER:
+            return self._parse_identifier(token)
         elif token.typ == TokenType.CURLY_OPEN:
             return self._parse_format()
         else:

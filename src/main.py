@@ -9,7 +9,7 @@ def expr_to_str(expr):
             if isinstance(arg, Expr):
                 res += expr_to_str(arg) + "\n"
             else:
-                res += str(arg) + " "
+                res += str(arg) + "\n"
     else:
         for key, val in expr.args.items():
             res += key + " : " + val + "\n" if isinstance(val, str) else key + " : " + expr_to_str(val)
