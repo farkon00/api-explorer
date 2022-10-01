@@ -9,7 +9,7 @@ def expr_to_str(expr):
             if isinstance(arg, Expr):
                 res += expr_to_str(arg) + "\n"
             else:
-                res += str(arg) + "\n"
+                res += str(arg) + " "
     else:
         for key, val in expr.args.items():
             res += key + " : " + val + "\n" if isinstance(val, str) else key + " : " + expr_to_str(val)
@@ -24,8 +24,9 @@ def main():
     #     print(f"{token.loc} {token.typ} {token.value}")
 
     parser = Parser(lexer.lex_text())
-    expr = parser._parse_nested_expr()
-    print(expr_to_str(expr))
+    exprs = parser.parse_tokens()
+    for expr in exprs: 
+        print(expr_to_str(expr))
 
 if __name__ == "__main__":
     main()

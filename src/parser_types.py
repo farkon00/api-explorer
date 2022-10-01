@@ -9,7 +9,7 @@ from lexer_types import Token
 class ExprType(Enum):
     DEF = auto()
     ROUTE = auto()
-    STATUS = auto()
+    RESPONSE = auto()
     LOAD_DEF = auto()
     FORMAT = auto()
     ARRAY_OF = auto()

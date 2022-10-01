@@ -2,6 +2,7 @@ from lexer_types import Token, TokenType
 from parser_types import *
 
 class Parser:
+    TOP_LEVEL_KEYOWRDS = ["def", "route", "response"]
     NESTABLE_KEYWORDS = ["Url", "ArrayOf"] 
 
     def __init__(self, tokens: list[Token]):
@@ -38,9 +39,30 @@ class Parser:
     def _parse_string(self):
         return self._expect_next(TokenType.STRING).value
 
+    def _parse_response_keyword(self, token: Token) -> Expr:
+        route = self._expect_next(TokenType.STRING)
+        response = self._expect_next(TokenType.IDENTIFIER)
+        if len(response.value) != 3 or not response.value.isnumeric():
+            self._error("Responce code must be a 3 digit number")
+        form = self._parse_nested_expr()
+        if isinstance(form, str):
+            self._error("String can't be a format")
+        return Expr(ExprType.RESPONSE, [route.value, int(response.value), form], token)
+
     def _parse_keyword(self, token: Token) -> Expr:
         self._expect(token, TokenType.KEYWORD)
-        if token.value == "ArrayOf":
+        if token.value == "def":
+            assert False, "Not implemented"
+        elif token.value == "route":
+            # TODO: Give a tip if there is code after route 
+            route = self._expect_next(TokenType.STRING)
+            form = self._parse_nested_expr()
+            if isinstance(form, str):
+                self._error("String can't be a format")
+            return Expr(ExprType.ROUTE, [route.value, form], token)
+        elif token.value == "response":
+            return self._parse_response_keyword(token)
+        elif token.value == "ArrayOf":
             return Expr(ExprType.ARRAY_OF, [self._parse_nested_expr()], token)
         elif token.value == "Url":
             return Expr(ExprType.URL, [self._parse_string()], token)
@@ -75,3 +97,20 @@ class Parser:
             return token.value
         elif token.typ == TokenType.CURLY_OPEN:
             return self._parse_format()
+        else:
+            self._error("Unexpected token")
+
+    def _parse_top_expr(self) -> Expr:
+        """
+        Parses one top-level expression
+        """
+        token = self._expect_next(TokenType.KEYWORD)
+        if token.value not in self.TOP_LEVEL_KEYOWRDS:
+            self._error("This keyword cannot be used on a top level")
+        return self._parse_keyword(token)
+
+    def parse_tokens(self):
+        exprs = []
+        while self.index < len(self.tokens):
+            exprs.append(self._parse_top_expr())
+        return exprs

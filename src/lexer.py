@@ -19,7 +19,7 @@ class Lexer:
         "\"" : "\""
     }
     TOKEN_STOP_CHARS = ["{", "}", ",", ":"]
-    KEYWORDS = ["def", "route", "status", "ArrayOf", "Url"]
+    KEYWORDS = ["def", "route", "response", "ArrayOf", "Url"]
 
     def __init__(self, text: str):
         self.text = text 
